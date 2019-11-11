@@ -30,13 +30,14 @@ package java.lang;
  * Every class has {@code Object} as a superclass. All objects,
  * including arrays, implement the methods of this class.
  *
- * @author  unascribed
- * @see     java.lang.Class
- * @since   JDK1.0
+ * @author unascribed
+ * @see java.lang.Class
+ * @since JDK1.0
  */
 public class Object {
 
     private static native void registerNatives();
+
     static {
         registerNatives();
     }
@@ -57,7 +58,7 @@ public class Object {
      * </p>
      *
      * @return The {@code Class} object that represents the runtime
-     *         class of this object.
+     * class of this object.
      * @jls 15.8.2 Class Literals
      */
     public final native Class<?> getClass();
@@ -93,9 +94,9 @@ public class Object {
      * technique is not required by the
      * Java&trade; programming language.)
      *
-     * @return  a hash code value for this object.
-     * @see     java.lang.Object#equals(java.lang.Object)
-     * @see     java.lang.System#identityHashCode
+     * @return a hash code value for this object.
+     * @see java.lang.Object#equals(java.lang.Object)
+     * @see java.lang.System#identityHashCode
      */
     public native int hashCode();
 
@@ -139,11 +140,11 @@ public class Object {
      * general contract for the {@code hashCode} method, which states
      * that equal objects must have equal hash codes.
      *
-     * @param   obj   the reference object with which to compare.
-     * @return  {@code true} if this object is the same as the obj
-     *          argument; {@code false} otherwise.
-     * @see     #hashCode()
-     * @see     java.util.HashMap
+     * @param obj the reference object with which to compare.
+     * @return {@code true} if this object is the same as the obj
+     * argument; {@code false} otherwise.
+     * @see #hashCode()
+     * @see java.util.HashMap
      */
     public boolean equals(Object obj) {
         return (this == obj);
@@ -201,12 +202,12 @@ public class Object {
      * whose class is {@code Object} will result in throwing an
      * exception at run time.
      *
-     * @return     a clone of this instance.
-     * @throws  CloneNotSupportedException  if the object's class does not
-     *               support the {@code Cloneable} interface. Subclasses
-     *               that override the {@code clone} method can also
-     *               throw this exception to indicate that an instance cannot
-     *               be cloned.
+     * @return a clone of this instance.
+     * @throws CloneNotSupportedException if the object's class does not
+     * support the {@code Cloneable} interface. Subclasses
+     * that override the {@code clone} method can also
+     * throw this exception to indicate that an instance cannot
+     * be cloned.
      * @see java.lang.Cloneable
      */
     protected native Object clone() throws CloneNotSupportedException;
@@ -230,19 +231,23 @@ public class Object {
      * getClass().getName() + '@' + Integer.toHexString(hashCode())
      * </pre></blockquote>
      *
-     * @return  a string representation of the object.
+     * @return a string representation of the object.
      */
     public String toString() {
         return getClass().getName() + "@" + Integer.toHexString(hashCode());
     }
 
     /**
+     * 唤醒等待该对象的锁的单个线程。如果有多个线程都在等待该对象的锁，会从这些线程中选择一个去唤醒。
+     * 选择是随机的并且由实现来决定。一个线程会调用 wait 方法来等待一个对象的锁。
      * Wakes up a single thread that is waiting on this object's
      * monitor. If any threads are waiting on this object, one of them
      * is chosen to be awakened. The choice is arbitrary and occurs at
      * the discretion of the implementation. A thread waits on an object's
      * monitor by calling one of the {@code wait} methods.
      * <p>
+     * 被唤醒的线程无法执行，直到当前线程让出了该对象的锁。被唤醒的线程会按照常规方式来竞争该对象的
+     * 同步操作。被唤醒的线程与其它获取该对象的锁的线程优先级一样。
      * The awakened thread will not be able to proceed until the current
      * thread relinquishes the lock on this object. The awakened thread will
      * compete in the usual manner with any other threads that might be
@@ -250,23 +255,28 @@ public class Object {
      * awakened thread enjoys no reliable privilege or disadvantage in being
      * the next thread to lock this object.
      * <p>
+     * 这个方法应该只会被该对象的锁的持有线程调用。一个线程成为对象的锁的持有者有以下三种方式：
      * This method should only be called by a thread that is the owner
      * of this object's monitor. A thread becomes the owner of the
      * object's monitor in one of three ways:
      * <ul>
+     *     执行该对象的一个 synchronized 的实例方法
      * <li>By executing a synchronized instance method of that object.
+     *     执行锁定该对象的 synchronized 的语句块
      * <li>By executing the body of a {@code synchronized} statement
      *     that synchronizes on the object.
+     *     对于 Class 类型的对象，执行该类的一个 synchronized 的静态方法
      * <li>For objects of type {@code Class,} by executing a
      *     synchronized static method of that class.
      * </ul>
      * <p>
+     * 在一个时刻只有一个线程可以获取一个对象的锁。
      * Only one thread at a time can own an object's monitor.
      *
-     * @throws  IllegalMonitorStateException  if the current thread is not
-     *               the owner of this object's monitor.
-     * @see        java.lang.Object#notifyAll()
-     * @see        java.lang.Object#wait()
+     * @throws IllegalMonitorStateException if the current thread is not
+     * the owner of this object's monitor.
+     * @see java.lang.Object#notifyAll()
+     * @see java.lang.Object#wait()
      */
     public final native void notify();
 
@@ -287,38 +297,54 @@ public class Object {
      * description of the ways in which a thread can become the owner of
      * a monitor.
      *
-     * @throws  IllegalMonitorStateException  if the current thread is not
-     *               the owner of this object's monitor.
-     * @see        java.lang.Object#notify()
-     * @see        java.lang.Object#wait()
+     * @throws IllegalMonitorStateException if the current thread is not
+     * the owner of this object's monitor.
+     * @see java.lang.Object#notify()
+     * @see java.lang.Object#wait()
      */
     public final native void notifyAll();
 
     /**
+     * 使得当前线程进入等待状态直到另一个线程调用了 notify/nofityAll 方法，或者是设定等待的时间已经过去。
      * Causes the current thread to wait until either another thread invokes the
      * {@link java.lang.Object#notify()} method or the
      * {@link java.lang.Object#notifyAll()} method for this object, or a
      * specified amount of time has elapsed.
      * <p>
+     * 当前线程必须拥有对象的锁
      * The current thread must own this object's monitor.
      * <p>
+     * 该方法会导致当前线程 T 进入这个对象的等待集合中，然后放弃对该对象的所有同步声明（释放锁）。
+     * 线程 T 将进入休眠，无法被调度直到下列四个事件中的一个发生：
      * This method causes the current thread (call it <var>T</var>) to
      * place itself in the wait set for this object and then to relinquish
      * any and all synchronization claims on this object. Thread <var>T</var>
      * becomes disabled for thread scheduling purposes and lies dormant
      * until one of four things happens:
      * <ul>
-     * <li>Some other thread invokes the {@code notify} method for this
+     * <li>
+     * 其他线程调用了这个对象的 notify 方法并且线程 T  刚好被随机选中为唤醒的线程。
+     *     Some other thread invokes the {@code notify} method for this
      * object and thread <var>T</var> happens to be arbitrarily chosen as
      * the thread to be awakened.
-     * <li>Some other thread invokes the {@code notifyAll} method for this
+     * <li>
+     * 其他线程调用了这个对象的 notifyAll 方法。
+     *     Some other thread invokes the {@code notifyAll} method for this
      * object.
-     * <li>Some other thread {@linkplain Thread#interrupt() interrupts}
+     * <li>
+     * 其他线程调用了线程 T 的 interrupt 方法来中断 T
+     *     Some other thread {@linkplain Thread#interrupt() interrupts}
      * thread <var>T</var>.
-     * <li>The specified amount of real time has elapsed, more or less.  If
+     * <li>
+     * 指定线程 T 等待的时间已过。如果指定的时间为 0，表示线程会一直等待，直到被 notify/notifyAll 方法唤醒。
+     *     The specified amount of real time has elapsed, more or less.  If
      * {@code timeout} is zero, however, then real time is not taken into
      * consideration and the thread simply waits until notified.
      * </ul>
+     * 线程 T 被唤醒之后会被移出对象的等待集合并且可以被线程调度，然后会按正常的方式与其它线程竞争该对象的锁的持有权。
+     * 一旦线程 T 获得了对象的控制权，该线程的同步状态会恢复到 wait 方法被调用之前的状态。
+     * 接下来，线程 T 会从 wait 方法的调用中返回。
+     * 因此，一旦 wait 方法返回，对象和线程 T 的同步状态与 wait 方法被调用之前的状态完全一致。
      * The thread <var>T</var> is then removed from the wait set for this
      * object and re-enabled for thread scheduling. It then competes in the
      * usual manner with other threads for the right to synchronize on the
@@ -331,6 +357,9 @@ public class Object {
      * thread {@code T} is exactly as it was when the {@code wait} method
      * was invoked.
      * <p>
+     * 虚假唤醒是指一个线程在没有被中断，通知以及未超时的情况下被唤醒。虽然这几乎不可能发生，
+     * 但是程序必须要保证避免虚假唤醒，在条件没有被满足的情况下继续等待。也就是说，wait 方法
+     * 应该在循环中被调用。
      * A thread can also wake up without being notified, interrupted, or
      * timing out, a so-called <i>spurious wakeup</i>.  While this will rarely
      * occur in practice, applications must guard against it by testing for
@@ -349,6 +378,8 @@ public class Object {
      * 2000), or Item 50 in Joshua Bloch's "Effective Java Programming
      * Language Guide" (Addison-Wesley, 2001).
      *
+     * 如果当前线程在等待之前或者等待状态中被其它线程调用 interrupt 方法中断了，会抛出 InterruptedException。
+     * 这个异常只有当线程的锁状态被恢复之后才会被抛出。
      * <p>If the current thread is {@linkplain java.lang.Thread#interrupt()
      * interrupted} by any thread before or while it is waiting, then an
      * {@code InterruptedException} is thrown.  This exception is not
@@ -356,28 +387,31 @@ public class Object {
      * described above.
      *
      * <p>
+     * 调用 wait 方法之后该线程会进入对象的等待队列中，唤醒时只会从该对象的队列中移出。
+     * 该线程等待的其它对象仍然会保持锁定状态。
      * Note that the {@code wait} method, as it places the current thread
      * into the wait set for this object, unlocks only this object; any
      * other objects on which the current thread may be synchronized remain
      * locked while the thread waits.
      * <p>
+     * 该方法应该只会被对象的锁的持有者调用。
      * This method should only be called by a thread that is the owner
      * of this object's monitor. See the {@code notify} method for a
      * description of the ways in which a thread can become the owner of
      * a monitor.
      *
-     * @param      timeout   the maximum time to wait in milliseconds.
-     * @throws  IllegalArgumentException      if the value of timeout is
-     *               negative.
-     * @throws  IllegalMonitorStateException  if the current thread is not
-     *               the owner of the object's monitor.
-     * @throws  InterruptedException if any thread interrupted the
-     *             current thread before or while the current thread
-     *             was waiting for a notification.  The <i>interrupted
-     *             status</i> of the current thread is cleared when
-     *             this exception is thrown.
-     * @see        java.lang.Object#notify()
-     * @see        java.lang.Object#notifyAll()
+     * @param timeout the maximum time to wait in milliseconds.
+     * @throws IllegalArgumentException if the value of timeout is
+     * negative.
+     * @throws IllegalMonitorStateException if the current thread is not
+     * the owner of the object's monitor.
+     * @throws InterruptedException if any thread interrupted the
+     * current thread before or while the current thread
+     * was waiting for a notification.  The <i>interrupted
+     * status</i> of the current thread is cleared when
+     * this exception is thrown.
+     * @see java.lang.Object#notify()
+     * @see java.lang.Object#notifyAll()
      */
     public final native void wait(long timeout) throws InterruptedException;
 
@@ -429,19 +463,19 @@ public class Object {
      * description of the ways in which a thread can become the owner of
      * a monitor.
      *
-     * @param      timeout   the maximum time to wait in milliseconds.
-     * @param      nanos      additional time, in nanoseconds range
-     *                       0-999999.
-     * @throws  IllegalArgumentException      if the value of timeout is
-     *                      negative or the value of nanos is
-     *                      not in the range 0-999999.
-     * @throws  IllegalMonitorStateException  if the current thread is not
-     *               the owner of this object's monitor.
-     * @throws  InterruptedException if any thread interrupted the
-     *             current thread before or while the current thread
-     *             was waiting for a notification.  The <i>interrupted
-     *             status</i> of the current thread is cleared when
-     *             this exception is thrown.
+     * @param timeout the maximum time to wait in milliseconds.
+     * @param nanos additional time, in nanoseconds range
+     * 0-999999.
+     * @throws IllegalArgumentException if the value of timeout is
+     * negative or the value of nanos is
+     * not in the range 0-999999.
+     * @throws IllegalMonitorStateException if the current thread is not
+     * the owner of this object's monitor.
+     * @throws InterruptedException if any thread interrupted the
+     * current thread before or while the current thread
+     * was waiting for a notification.  The <i>interrupted
+     * status</i> of the current thread is cleared when
+     * this exception is thrown.
      */
     public final void wait(long timeout, int nanos) throws InterruptedException {
         if (timeout < 0) {
@@ -450,7 +484,7 @@ public class Object {
 
         if (nanos < 0 || nanos > 999999) {
             throw new IllegalArgumentException(
-                                "nanosecond timeout value out of range");
+                    "nanosecond timeout value out of range");
         }
 
         if (nanos > 0) {
@@ -461,12 +495,17 @@ public class Object {
     }
 
     /**
+     * 使得当前线程等待，直到其他线程调用了该对象的 notify/notifyAll 方法。
+     * 该方法执行结果与 wait(0) 一致（一直等待直到被人唤醒）。
      * Causes the current thread to wait until another thread invokes the
      * {@link java.lang.Object#notify()} method or the
      * {@link java.lang.Object#notifyAll()} method for this object.
      * In other words, this method behaves exactly as if it simply
      * performs the call {@code wait(0)}.
      * <p>
+     * 当前线程必须持有对象的 monitor（监视器 -> 锁）。
+     * 该线程会释放持有的锁并一直等待，直到另一个线程调用 notify/notifyAll 方法来通知
+     * 等待获取该对象的锁的线程。接下来线程仍然会继续等待直到它获得了锁来恢复执行。
      * The current thread must own this object's monitor. The thread
      * releases ownership of this monitor and waits until another thread
      * notifies threads waiting on this object's monitor to wake up
@@ -474,6 +513,9 @@ public class Object {
      * {@code notifyAll} method. The thread then waits until it can
      * re-obtain ownership of the monitor and resumes execution.
      * <p>
+     *
+     * 对于一个参数的 wait 方法来说，中断和虚假唤醒（被唤醒之后，所等待的条件依然不满足）都是可能发生的，
+     * 所以，该方法应该在循环当中调用（被唤醒之后再判断一次等待的条件是否已经满足）
      * As in the one argument version, interrupts and spurious wakeups are
      * possible, and this method should always be used in a loop:
      * <pre>
@@ -483,20 +525,22 @@ public class Object {
      *         ... // Perform action appropriate to condition
      *     }
      * </pre>
+     * 该方法应该只被持有这个对象的锁的线程去调用。
+     * 阅读 notify 方法查看关于线程在什么情况下能够变成锁的持有者的描述。
      * This method should only be called by a thread that is the owner
      * of this object's monitor. See the {@code notify} method for a
      * description of the ways in which a thread can become the owner of
      * a monitor.
      *
-     * @throws  IllegalMonitorStateException  if the current thread is not
-     *               the owner of the object's monitor.
-     * @throws  InterruptedException if any thread interrupted the
-     *             current thread before or while the current thread
-     *             was waiting for a notification.  The <i>interrupted
-     *             status</i> of the current thread is cleared when
-     *             this exception is thrown.
-     * @see        java.lang.Object#notify()
-     * @see        java.lang.Object#notifyAll()
+     * @throws IllegalMonitorStateException if the current thread is not
+     * the owner of the object's monitor.
+     * @throws InterruptedException if any thread interrupted the
+     * current thread before or while the current thread
+     * was waiting for a notification.  The <i>interrupted
+     * status</i> of the current thread is cleared when
+     * this exception is thrown.
+     * @see java.lang.Object#notify()
+     * @see java.lang.Object#notifyAll()
      */
     public final void wait() throws InterruptedException {
         wait(0);
@@ -548,9 +592,10 @@ public class Object {
      * ignored.
      *
      * @throws Throwable the {@code Exception} raised by this method
+     * @jls 12.6 Finalization of Class Instances
      * @see java.lang.ref.WeakReference
      * @see java.lang.ref.PhantomReference
-     * @jls 12.6 Finalization of Class Instances
      */
-    protected void finalize() throws Throwable { }
+    protected void finalize() throws Throwable {
+    }
 }

@@ -282,6 +282,8 @@ class Thread implements Runnable {
     public static native void yield();
 
     /**
+     * 导致当前执行的线程进入休眠状态（临时终止执行）一段时间，取决于系统和调度器的准确度。
+     * 当前线程并不会失去任何锁的所有权。
      * Causes the currently executing thread to sleep (temporarily cease
      * execution) for the specified number of milliseconds, subject to
      * the precision and accuracy of system timers and schedulers. The thread
