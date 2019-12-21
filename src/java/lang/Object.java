@@ -281,10 +281,13 @@ public class Object {
     public final native void notify();
 
     /**
+     * 唤醒等待该对象的锁的所有线程。一个线程会调用 wait 方法来等待一个对象的锁。
      * Wakes up all threads that are waiting on this object's monitor. A
      * thread waits on an object's monitor by calling one of the
      * {@code wait} methods.
      * <p>
+     * 被唤醒的线程无法执行，直到当前线程让出了该对象的锁。被唤醒的线程会按照常规方式来竞争该对象的
+     * 同步操作。被唤醒的线程与其它获取该对象的锁的线程优先级一样。
      * The awakened threads will not be able to proceed until the current
      * thread relinquishes the lock on this object. The awakened threads
      * will compete in the usual manner with any other threads that might
@@ -292,6 +295,7 @@ public class Object {
      * the awakened threads enjoy no reliable privilege or disadvantage in
      * being the next thread to lock this object.
      * <p>
+     * 这个方法应该只会被该对象的锁的持有线程调用。
      * This method should only be called by a thread that is the owner
      * of this object's monitor. See the {@code notify} method for a
      * description of the ways in which a thread can become the owner of
