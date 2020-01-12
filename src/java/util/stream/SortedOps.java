@@ -39,7 +39,8 @@ import java.util.function.IntFunction;
  */
 final class SortedOps {
 
-    private SortedOps() { }
+    private SortedOps() {
+    }
 
     /**
      * Appends a "sorted" operation to the provided stream.
@@ -59,7 +60,7 @@ final class SortedOps {
      * @param comparator the comparator to order elements by
      */
     static <T> Stream<T> makeRef(AbstractPipeline<?, T, ?> upstream,
-                                Comparator<? super T> comparator) {
+            Comparator<? super T> comparator) {
         return new OfRef<>(upstream, comparator);
     }
 
@@ -97,6 +98,7 @@ final class SortedOps {
      * Specialized subtype for sorting reference streams
      */
     private static final class OfRef<T> extends ReferencePipeline.StatefulOp<T, T> {
+
         /**
          * Comparator used for sorting
          */
@@ -109,11 +111,11 @@ final class SortedOps {
          */
         OfRef(AbstractPipeline<?, T, ?> upstream) {
             super(upstream, StreamShape.REFERENCE,
-                  StreamOpFlag.IS_ORDERED | StreamOpFlag.IS_SORTED);
+                    StreamOpFlag.IS_ORDERED | StreamOpFlag.IS_SORTED);
             this.isNaturalSort = true;
             // Will throw CCE when we try to sort if T is not Comparable
             @SuppressWarnings("unchecked")
-            Comparator<? super T> comp = Comparator.naturalOrder();
+            Comparator<? super T> comp = (Comparator<? super T>) Comparator.naturalOrder();
             this.comparator = comp;
         }
 
@@ -124,7 +126,7 @@ final class SortedOps {
          */
         OfRef(AbstractPipeline<?, T, ?> upstream, Comparator<? super T> comparator) {
             super(upstream, StreamShape.REFERENCE,
-                  StreamOpFlag.IS_ORDERED | StreamOpFlag.NOT_SORTED);
+                    StreamOpFlag.IS_ORDERED | StreamOpFlag.NOT_SORTED);
             this.isNaturalSort = false;
             this.comparator = Objects.requireNonNull(comparator);
         }
@@ -135,26 +137,27 @@ final class SortedOps {
 
             // If the input is already naturally sorted and this operation
             // also naturally sorted then this is a no-op
-            if (StreamOpFlag.SORTED.isKnown(flags) && isNaturalSort)
+            if (StreamOpFlag.SORTED.isKnown(flags) && isNaturalSort) {
                 return sink;
-            else if (StreamOpFlag.SIZED.isKnown(flags))
+            } else if (StreamOpFlag.SIZED.isKnown(flags)) {
                 return new SizedRefSortingSink<>(sink, comparator);
-            else
+            } else {
                 return new RefSortingSink<>(sink, comparator);
+            }
         }
 
         @Override
         public <P_IN> Node<T> opEvaluateParallel(PipelineHelper<T> helper,
-                                                 Spliterator<P_IN> spliterator,
-                                                 IntFunction<T[]> generator) {
+                Spliterator<P_IN> spliterator,
+                IntFunction<T[]> generator) {
             // If the input is already naturally sorted and this operation
             // naturally sorts then collect the output
             if (StreamOpFlag.SORTED.isKnown(helper.getStreamAndOpFlags()) && isNaturalSort) {
                 return helper.evaluate(spliterator, false, generator);
-            }
-            else {
+            } else {
                 // @@@ Weak two-pass parallel implementation; parallel collect, parallel sort
-                T[] flattenedData = helper.evaluate(spliterator, true, generator).asArray(generator);
+                T[] flattenedData = helper.evaluate(spliterator, true, generator)
+                        .asArray(generator);
                 Arrays.parallelSort(flattenedData, comparator);
                 return Nodes.node(flattenedData);
             }
@@ -165,31 +168,32 @@ final class SortedOps {
      * Specialized subtype for sorting int streams.
      */
     private static final class OfInt extends IntPipeline.StatefulOp<Integer> {
+
         OfInt(AbstractPipeline<?, Integer, ?> upstream) {
             super(upstream, StreamShape.INT_VALUE,
-                  StreamOpFlag.IS_ORDERED | StreamOpFlag.IS_SORTED);
+                    StreamOpFlag.IS_ORDERED | StreamOpFlag.IS_SORTED);
         }
 
         @Override
         public Sink<Integer> opWrapSink(int flags, Sink<Integer> sink) {
             Objects.requireNonNull(sink);
 
-            if (StreamOpFlag.SORTED.isKnown(flags))
+            if (StreamOpFlag.SORTED.isKnown(flags)) {
                 return sink;
-            else if (StreamOpFlag.SIZED.isKnown(flags))
+            } else if (StreamOpFlag.SIZED.isKnown(flags)) {
                 return new SizedIntSortingSink(sink);
-            else
+            } else {
                 return new IntSortingSink(sink);
+            }
         }
 
         @Override
         public <P_IN> Node<Integer> opEvaluateParallel(PipelineHelper<Integer> helper,
-                                                       Spliterator<P_IN> spliterator,
-                                                       IntFunction<Integer[]> generator) {
+                Spliterator<P_IN> spliterator,
+                IntFunction<Integer[]> generator) {
             if (StreamOpFlag.SORTED.isKnown(helper.getStreamAndOpFlags())) {
                 return helper.evaluate(spliterator, false, generator);
-            }
-            else {
+            } else {
                 Node.OfInt n = (Node.OfInt) helper.evaluate(spliterator, true, generator);
 
                 int[] content = n.asPrimitiveArray();
@@ -204,31 +208,32 @@ final class SortedOps {
      * Specialized subtype for sorting long streams.
      */
     private static final class OfLong extends LongPipeline.StatefulOp<Long> {
+
         OfLong(AbstractPipeline<?, Long, ?> upstream) {
             super(upstream, StreamShape.LONG_VALUE,
-                  StreamOpFlag.IS_ORDERED | StreamOpFlag.IS_SORTED);
+                    StreamOpFlag.IS_ORDERED | StreamOpFlag.IS_SORTED);
         }
 
         @Override
         public Sink<Long> opWrapSink(int flags, Sink<Long> sink) {
             Objects.requireNonNull(sink);
 
-            if (StreamOpFlag.SORTED.isKnown(flags))
+            if (StreamOpFlag.SORTED.isKnown(flags)) {
                 return sink;
-            else if (StreamOpFlag.SIZED.isKnown(flags))
+            } else if (StreamOpFlag.SIZED.isKnown(flags)) {
                 return new SizedLongSortingSink(sink);
-            else
+            } else {
                 return new LongSortingSink(sink);
+            }
         }
 
         @Override
         public <P_IN> Node<Long> opEvaluateParallel(PipelineHelper<Long> helper,
-                                                    Spliterator<P_IN> spliterator,
-                                                    IntFunction<Long[]> generator) {
+                Spliterator<P_IN> spliterator,
+                IntFunction<Long[]> generator) {
             if (StreamOpFlag.SORTED.isKnown(helper.getStreamAndOpFlags())) {
                 return helper.evaluate(spliterator, false, generator);
-            }
-            else {
+            } else {
                 Node.OfLong n = (Node.OfLong) helper.evaluate(spliterator, true, generator);
 
                 long[] content = n.asPrimitiveArray();
@@ -243,31 +248,32 @@ final class SortedOps {
      * Specialized subtype for sorting double streams.
      */
     private static final class OfDouble extends DoublePipeline.StatefulOp<Double> {
+
         OfDouble(AbstractPipeline<?, Double, ?> upstream) {
             super(upstream, StreamShape.DOUBLE_VALUE,
-                  StreamOpFlag.IS_ORDERED | StreamOpFlag.IS_SORTED);
+                    StreamOpFlag.IS_ORDERED | StreamOpFlag.IS_SORTED);
         }
 
         @Override
         public Sink<Double> opWrapSink(int flags, Sink<Double> sink) {
             Objects.requireNonNull(sink);
 
-            if (StreamOpFlag.SORTED.isKnown(flags))
+            if (StreamOpFlag.SORTED.isKnown(flags)) {
                 return sink;
-            else if (StreamOpFlag.SIZED.isKnown(flags))
+            } else if (StreamOpFlag.SIZED.isKnown(flags)) {
                 return new SizedDoubleSortingSink(sink);
-            else
+            } else {
                 return new DoubleSortingSink(sink);
+            }
         }
 
         @Override
         public <P_IN> Node<Double> opEvaluateParallel(PipelineHelper<Double> helper,
-                                                      Spliterator<P_IN> spliterator,
-                                                      IntFunction<Double[]> generator) {
+                Spliterator<P_IN> spliterator,
+                IntFunction<Double[]> generator) {
             if (StreamOpFlag.SORTED.isKnown(helper.getStreamAndOpFlags())) {
                 return helper.evaluate(spliterator, false, generator);
-            }
-            else {
+            } else {
                 Node.OfDouble n = (Node.OfDouble) helper.evaluate(spliterator, true, generator);
 
                 double[] content = n.asPrimitiveArray();
@@ -302,6 +308,7 @@ final class SortedOps {
      * parallel pipelines.
      */
     private static abstract class AbstractRefSortingSink<T> extends Sink.ChainedReference<T, T> {
+
         protected final Comparator<? super T> comparator;
         // @@@ could be a lazy final value, if/when support is added
         protected boolean cancellationWasRequested;
@@ -328,6 +335,7 @@ final class SortedOps {
      * {@link Sink} for implementing sort on SIZED reference streams.
      */
     private static final class SizedRefSortingSink<T> extends AbstractRefSortingSink<T> {
+
         private T[] array;
         private int offset;
 
@@ -338,8 +346,9 @@ final class SortedOps {
         @Override
         @SuppressWarnings("unchecked")
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
+            if (size >= Nodes.MAX_ARRAY_SIZE) {
                 throw new IllegalArgumentException(Nodes.BAD_SIZE);
+            }
             array = (T[]) new Object[(int) size];
         }
 
@@ -348,12 +357,13 @@ final class SortedOps {
             Arrays.sort(array, 0, offset, comparator);
             downstream.begin(offset);
             if (!cancellationWasRequested) {
-                for (int i = 0; i < offset; i++)
+                for (int i = 0; i < offset; i++) {
                     downstream.accept(array[i]);
-            }
-            else {
-                for (int i = 0; i < offset && !downstream.cancellationRequested(); i++)
+                }
+            } else {
+                for (int i = 0; i < offset && !downstream.cancellationRequested(); i++) {
                     downstream.accept(array[i]);
+                }
             }
             downstream.end();
             array = null;
@@ -369,6 +379,7 @@ final class SortedOps {
      * {@link Sink} for implementing sort on reference streams.
      */
     private static final class RefSortingSink<T> extends AbstractRefSortingSink<T> {
+
         private ArrayList<T> list;
 
         RefSortingSink(Sink<? super T> sink, Comparator<? super T> comparator) {
@@ -377,8 +388,9 @@ final class SortedOps {
 
         @Override
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
+            if (size >= Nodes.MAX_ARRAY_SIZE) {
                 throw new IllegalArgumentException(Nodes.BAD_SIZE);
+            }
             list = (size >= 0) ? new ArrayList<T>((int) size) : new ArrayList<T>();
         }
 
@@ -388,10 +400,11 @@ final class SortedOps {
             downstream.begin(list.size());
             if (!cancellationWasRequested) {
                 list.forEach(downstream::accept);
-            }
-            else {
+            } else {
                 for (T t : list) {
-                    if (downstream.cancellationRequested()) break;
+                    if (downstream.cancellationRequested()) {
+                        break;
+                    }
                     downstream.accept(t);
                 }
             }
@@ -409,6 +422,7 @@ final class SortedOps {
      * Abstract {@link Sink} for implementing sort on int streams.
      */
     private static abstract class AbstractIntSortingSink extends Sink.ChainedInt<Integer> {
+
         protected boolean cancellationWasRequested;
 
         AbstractIntSortingSink(Sink<? super Integer> downstream) {
@@ -426,6 +440,7 @@ final class SortedOps {
      * {@link Sink} for implementing sort on SIZED int streams.
      */
     private static final class SizedIntSortingSink extends AbstractIntSortingSink {
+
         private int[] array;
         private int offset;
 
@@ -435,8 +450,9 @@ final class SortedOps {
 
         @Override
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
+            if (size >= Nodes.MAX_ARRAY_SIZE) {
                 throw new IllegalArgumentException(Nodes.BAD_SIZE);
+            }
             array = new int[(int) size];
         }
 
@@ -445,12 +461,13 @@ final class SortedOps {
             Arrays.sort(array, 0, offset);
             downstream.begin(offset);
             if (!cancellationWasRequested) {
-                for (int i = 0; i < offset; i++)
+                for (int i = 0; i < offset; i++) {
                     downstream.accept(array[i]);
-            }
-            else {
-                for (int i = 0; i < offset && !downstream.cancellationRequested(); i++)
+                }
+            } else {
+                for (int i = 0; i < offset && !downstream.cancellationRequested(); i++) {
                     downstream.accept(array[i]);
+                }
             }
             downstream.end();
             array = null;
@@ -466,6 +483,7 @@ final class SortedOps {
      * {@link Sink} for implementing sort on int streams.
      */
     private static final class IntSortingSink extends AbstractIntSortingSink {
+
         private SpinedBuffer.OfInt b;
 
         IntSortingSink(Sink<? super Integer> sink) {
@@ -474,8 +492,9 @@ final class SortedOps {
 
         @Override
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
+            if (size >= Nodes.MAX_ARRAY_SIZE) {
                 throw new IllegalArgumentException(Nodes.BAD_SIZE);
+            }
             b = (size > 0) ? new SpinedBuffer.OfInt((int) size) : new SpinedBuffer.OfInt();
         }
 
@@ -485,12 +504,14 @@ final class SortedOps {
             Arrays.sort(ints);
             downstream.begin(ints.length);
             if (!cancellationWasRequested) {
-                for (int anInt : ints)
-                    downstream.accept(anInt);
-            }
-            else {
                 for (int anInt : ints) {
-                    if (downstream.cancellationRequested()) break;
+                    downstream.accept(anInt);
+                }
+            } else {
+                for (int anInt : ints) {
+                    if (downstream.cancellationRequested()) {
+                        break;
+                    }
                     downstream.accept(anInt);
                 }
             }
@@ -507,6 +528,7 @@ final class SortedOps {
      * Abstract {@link Sink} for implementing sort on long streams.
      */
     private static abstract class AbstractLongSortingSink extends Sink.ChainedLong<Long> {
+
         protected boolean cancellationWasRequested;
 
         AbstractLongSortingSink(Sink<? super Long> downstream) {
@@ -524,6 +546,7 @@ final class SortedOps {
      * {@link Sink} for implementing sort on SIZED long streams.
      */
     private static final class SizedLongSortingSink extends AbstractLongSortingSink {
+
         private long[] array;
         private int offset;
 
@@ -533,8 +556,9 @@ final class SortedOps {
 
         @Override
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
+            if (size >= Nodes.MAX_ARRAY_SIZE) {
                 throw new IllegalArgumentException(Nodes.BAD_SIZE);
+            }
             array = new long[(int) size];
         }
 
@@ -543,12 +567,13 @@ final class SortedOps {
             Arrays.sort(array, 0, offset);
             downstream.begin(offset);
             if (!cancellationWasRequested) {
-                for (int i = 0; i < offset; i++)
+                for (int i = 0; i < offset; i++) {
                     downstream.accept(array[i]);
-            }
-            else {
-                for (int i = 0; i < offset && !downstream.cancellationRequested(); i++)
+                }
+            } else {
+                for (int i = 0; i < offset && !downstream.cancellationRequested(); i++) {
                     downstream.accept(array[i]);
+                }
             }
             downstream.end();
             array = null;
@@ -564,6 +589,7 @@ final class SortedOps {
      * {@link Sink} for implementing sort on long streams.
      */
     private static final class LongSortingSink extends AbstractLongSortingSink {
+
         private SpinedBuffer.OfLong b;
 
         LongSortingSink(Sink<? super Long> sink) {
@@ -572,8 +598,9 @@ final class SortedOps {
 
         @Override
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
+            if (size >= Nodes.MAX_ARRAY_SIZE) {
                 throw new IllegalArgumentException(Nodes.BAD_SIZE);
+            }
             b = (size > 0) ? new SpinedBuffer.OfLong((int) size) : new SpinedBuffer.OfLong();
         }
 
@@ -583,12 +610,14 @@ final class SortedOps {
             Arrays.sort(longs);
             downstream.begin(longs.length);
             if (!cancellationWasRequested) {
-                for (long aLong : longs)
-                    downstream.accept(aLong);
-            }
-            else {
                 for (long aLong : longs) {
-                    if (downstream.cancellationRequested()) break;
+                    downstream.accept(aLong);
+                }
+            } else {
+                for (long aLong : longs) {
+                    if (downstream.cancellationRequested()) {
+                        break;
+                    }
                     downstream.accept(aLong);
                 }
             }
@@ -605,6 +634,7 @@ final class SortedOps {
      * Abstract {@link Sink} for implementing sort on long streams.
      */
     private static abstract class AbstractDoubleSortingSink extends Sink.ChainedDouble<Double> {
+
         protected boolean cancellationWasRequested;
 
         AbstractDoubleSortingSink(Sink<? super Double> downstream) {
@@ -622,6 +652,7 @@ final class SortedOps {
      * {@link Sink} for implementing sort on SIZED double streams.
      */
     private static final class SizedDoubleSortingSink extends AbstractDoubleSortingSink {
+
         private double[] array;
         private int offset;
 
@@ -631,8 +662,9 @@ final class SortedOps {
 
         @Override
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
+            if (size >= Nodes.MAX_ARRAY_SIZE) {
                 throw new IllegalArgumentException(Nodes.BAD_SIZE);
+            }
             array = new double[(int) size];
         }
 
@@ -641,12 +673,13 @@ final class SortedOps {
             Arrays.sort(array, 0, offset);
             downstream.begin(offset);
             if (!cancellationWasRequested) {
-                for (int i = 0; i < offset; i++)
+                for (int i = 0; i < offset; i++) {
                     downstream.accept(array[i]);
-            }
-            else {
-                for (int i = 0; i < offset && !downstream.cancellationRequested(); i++)
+                }
+            } else {
+                for (int i = 0; i < offset && !downstream.cancellationRequested(); i++) {
                     downstream.accept(array[i]);
+                }
             }
             downstream.end();
             array = null;
@@ -662,6 +695,7 @@ final class SortedOps {
      * {@link Sink} for implementing sort on double streams.
      */
     private static final class DoubleSortingSink extends AbstractDoubleSortingSink {
+
         private SpinedBuffer.OfDouble b;
 
         DoubleSortingSink(Sink<? super Double> sink) {
@@ -670,8 +704,9 @@ final class SortedOps {
 
         @Override
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
+            if (size >= Nodes.MAX_ARRAY_SIZE) {
                 throw new IllegalArgumentException(Nodes.BAD_SIZE);
+            }
             b = (size > 0) ? new SpinedBuffer.OfDouble((int) size) : new SpinedBuffer.OfDouble();
         }
 
@@ -681,12 +716,14 @@ final class SortedOps {
             Arrays.sort(doubles);
             downstream.begin(doubles.length);
             if (!cancellationWasRequested) {
-                for (double aDouble : doubles)
-                    downstream.accept(aDouble);
-            }
-            else {
                 for (double aDouble : doubles) {
-                    if (downstream.cancellationRequested()) break;
+                    downstream.accept(aDouble);
+                }
+            } else {
+                for (double aDouble : doubles) {
+                    if (downstream.cancellationRequested()) {
+                        break;
+                    }
                     downstream.accept(aDouble);
                 }
             }
