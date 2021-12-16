@@ -441,11 +441,11 @@ public abstract class AbstractQueuedSynchronizer
     static final class Node {
 
         /**
-         * 标识节点当前在共享模式下
+         * 标记线程在获取共享资源时被阻塞
          */
         static final Node SHARED = new Node();
         /**
-         * 标识节点当前在独占模式下
+         * 标记线程在获取独占资源时被阻塞
          */
         static final Node EXCLUSIVE = null;
 
@@ -455,15 +455,15 @@ public abstract class AbstractQueuedSynchronizer
         static final int CANCELLED = 1;
 
         /**
-         * 表示后继节点对应的线程需要被唤醒
+         * 标识线程需要被唤醒
          */
         static final int SIGNAL = -1;
         /**
-         * 表示节点在条件队列中
+         * 标识线程在条件队列中等待
          */
         static final int CONDITION = -2;
         /**
-         * 表示下一次共享式同步状态获取将被无条件的传播下去
+         * 标识释放共享资源时需要通知其他节点
          * waitStatus value to indicate the next acquireShared should
          * unconditionally propagate
          */
@@ -749,7 +749,7 @@ public abstract class AbstractQueuedSynchronizer
             }
         }
         if (s != null) {
-            //唤醒线程
+            // 唤醒线程
             LockSupport.unpark(s.thread);
         }
     }
@@ -1045,7 +1045,7 @@ public abstract class AbstractQueuedSynchronizer
      * @param arg the acquire argument
      */
     private void doAcquireShared(int arg) {
-        // 构建共享锁节点，准备添加到队列中
+        // 构建类型为 SHARED 的 Node 节点，标识获取共享资源失败。
         final Node node = addWaiter(Node.SHARED);
         boolean failed = true;
         try {
@@ -1984,6 +1984,8 @@ public abstract class AbstractQueuedSynchronizer
      *
      * <p>This class is Serializable, but all fields are transient,
      * so deserialized conditions have no waiters.
+     *
+     * 条件变量，每个条件变量对应一个条件队列（单向链表）
      */
     public class ConditionObject implements Condition, java.io.Serializable {
 

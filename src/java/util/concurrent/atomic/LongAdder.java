@@ -83,8 +83,11 @@ public class LongAdder extends Striped64 implements Serializable {
      */
     public void add(long x) {
         Cell[] as; long b, v; int m; Cell a;
+        // 如果 cells 为 null，则会执行 casBase(b = base, b + x)，尝试对基础变量 base 进行累加，类似于 AtomicLong 的操作
         if ((as = cells) != null || !casBase(b = base, b + x)) {
+            // cells 不为 null，或者对 base 进行 cas 更新失败。
             boolean uncontended = true;
+            // 获取当前线程应该访问的 cells 数组元素，并使用 CAS 进行更新。
             if (as == null || (m = as.length - 1) < 0 ||
                 (a = as[getProbe() & m]) == null ||
                 !(uncontended = a.cas(v = a.value, v + x)))

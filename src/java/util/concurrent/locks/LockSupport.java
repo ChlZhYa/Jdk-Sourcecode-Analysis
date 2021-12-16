@@ -126,6 +126,7 @@ public class LockSupport {
     }
 
     /**
+     * 如果调用方法时实参 thread 没有许可证，这里会给 thread 线程一个许可证
      * Makes available the permit for the given thread, if it
      * was not already available.  If the thread was blocked on
      * {@code park} then it will unblock.  Otherwise, its next call
@@ -171,7 +172,7 @@ public class LockSupport {
      */
     public static void park(Object blocker) {
         Thread t = Thread.currentThread();
-        setBlocker(t, blocker);
+        setBlocker(t, blocker);// 将 blocker 存放到调用 park 方法的线程中
         UNSAFE.park(false, 0L);
         setBlocker(t, null);
     }
@@ -207,6 +208,9 @@ public class LockSupport {
      *        thread parking
      * @param nanos the maximum number of nanoseconds to wait
      * @since 1.6
+     *
+     *
+     * blocker 用于阻塞诊断分析原因，一般设置为 this
      */
     public static void parkNanos(Object blocker, long nanos) {
         if (nanos > 0) {
@@ -299,6 +303,10 @@ public class LockSupport {
      * method to return. Callers should re-check the conditions which caused
      * the thread to park in the first place. Callers may also determine,
      * for example, the interrupt status of the thread upon return.
+     *
+     *
+     * park 会等待调用线程获取到许可证之后返回。
+     * 对 interrupt() 敏感，但并不会抛出 Exception
      */
     public static void park() {
         UNSAFE.park(false, 0L);
@@ -332,6 +340,8 @@ public class LockSupport {
      * upon return.
      *
      * @param nanos the maximum number of nanoseconds to wait
+     *
+     * 带超时时间的 park()
      */
     public static void parkNanos(long nanos) {
         if (nanos > 0)

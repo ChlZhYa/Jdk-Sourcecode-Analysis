@@ -432,16 +432,19 @@ public class CopyOnWriteArrayList<E>
      * @return {@code true} (as specified by {@link Collection#add})
      */
     public boolean add(E e) {
+        // 获取独占锁
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             Object[] elements = getArray();
             int len = elements.length;
+            // 新建一个长度为 len + 1 的数组，拷贝原数组元素，将新元素放入新数组末尾
             Object[] newElements = Arrays.copyOf(elements, len + 1);
             newElements[len] = e;
             setArray(newElements);
             return true;
         } finally {
+            // 释放锁
             lock.unlock();
         }
     }
@@ -493,7 +496,9 @@ public class CopyOnWriteArrayList<E>
             Object[] elements = getArray();
             int len = elements.length;
             E oldValue = get(elements, index);
+            // 需要移动位置的元素的个数
             int numMoved = len - index - 1;
+            // 等于 0 时表示移除最后一位
             if (numMoved == 0)
                 setArray(Arrays.copyOf(elements, len - 1));
             else {
@@ -1127,12 +1132,13 @@ public class CopyOnWriteArrayList<E>
 
     static final class COWIterator<E> implements ListIterator<E> {
         /** Snapshot of the array */
-        private final Object[] snapshot;
+        private final Object[] snapshot;// array 快照
         /** Index of element to be returned by subsequent call to next.  */
         private int cursor;
 
         private COWIterator(Object[] elements, int initialCursor) {
             cursor = initialCursor;
+            // 虽然快照是直接引用传递，但是修改操作之后，CopyOnWriteArrayList 中实际的 array 会被替换成新的数组，而此处仍然是引用的旧数组，所以也就是快照
             snapshot = elements;
         }
 
